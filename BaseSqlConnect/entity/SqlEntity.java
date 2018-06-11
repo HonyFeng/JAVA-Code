@@ -40,6 +40,8 @@ public class SqlEntity {
      */
     private Object object;
 
+    private Map<String,String> list;
+
     public String getId() {
         return id;
     }
@@ -88,8 +90,17 @@ public class SqlEntity {
         this.object = object;
     }
 
+    public Map<String, String> getList() {
+        return list;
+    }
+
+    public void setList(Map<String, String> list) {
+        this.list = list;
+    }
+
     /**
      * 对象处理机制,建议暂时不使用
+     * 获取一个对象中的所有名称，并拼接成字符串
      * @return
      * @throws Exception
      */
@@ -104,12 +115,36 @@ public class SqlEntity {
         for (int i = 0; i < fields.length; i++) {
             fields[i].setAccessible(true);
             content.append(fields[i].getName()+",");
-            System.out.print(fields[i].getName() + ":");
+        }
+        /**
+         * 删除最后以一个","
+         */
+        content.deleteCharAt(content.length()-1);
+        /**
+         * 删除开头多余的空格
+         */
+        content.deleteCharAt(0);
+        return content.toString();
+
+    }
+    /**
+     * 对象处理机制,赋值操作
+     * @return
+     * @throws Exception
+     */
+    public String geObjectValueBySQL()throws Exception{
+        StringBuffer content = new StringBuffer(" (");
+        /**
+         * 处理对象中的数值
+         */
+        Class object = getObject().getClass();
+        Field[] fields = object.getDeclaredFields();
+        for (int i = 0; i < fields.length; i++) {
+            fields[i].setAccessible(true);
             if(fields[i].getType().getName().equals("java.lang.String")){
-                System.out.println(fields[i].get(getObject()));
-                // 后面需要思考当 值为空的时候如何处理
+                content.append("'"+fields[i].get(getObject())+"'"+",");
             }else if(fields[i].getType().getName().equals("java.lang.Integer")){
-                System.out.println(fields[i].getInt(getObject()));
+                content.append(fields[i].getInt(getObject())+",");
             }
         }
         /**
@@ -120,7 +155,36 @@ public class SqlEntity {
          * 删除开头多余的空格
          */
         content.deleteCharAt(0);
-        System.out.println("对象处理完成:" + content.toString());
+        content.append(")");
+        return content.toString();
+    }
+    /**
+     * 更新语句
+     * 对象处理机制,建议暂时不使用
+     * @return
+     * @throws Exception
+     */
+    public String getUpdateSql() throws Exception {
+        StringBuffer content = new StringBuffer(" ");
+        Class object = getObject().getClass();
+        Field[] fields = object.getDeclaredFields();
+        for (int i = 0; i < fields.length; i++) {
+            fields[i].setAccessible(true);
+            content.append(fields[i].getName()+" = ");
+            if(fields[i].getType().getName().equals("java.lang.String")){
+                content.append(fields[i].get(getObject())+",");
+            }else if(fields[i].getType().getName().equals("java.lang.Integer")){
+                content.append(fields[i].getInt(getObject())+",");
+            }
+        }
+        /**
+         * 删除最后以一个","
+         */
+        content.deleteCharAt(content.length()-1);
+        /**
+         * 删除开头多余的空格
+         */
+        content.deleteCharAt(0);
         return content.toString();
 
     }

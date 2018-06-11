@@ -1,4 +1,4 @@
-package com.gjt.chatService.utils;
+﻿package com.gjt.chatService.utils;
 
 /**
  * @author 官江涛
@@ -9,5 +9,4 @@ package com.gjt.chatService.utils;
 public class KeyWord {
     public static final String AND = " AND ";
     public static final String OR = " OR ";
-
 }

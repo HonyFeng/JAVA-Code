@@ -1,4 +1,6 @@
-package com.gjt.chatService.entity;
+package com.gjt.chatService.utils;
+
+import com.gjt.chatService.entity.SqlEntity;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -75,8 +77,62 @@ public class Sql {
         return baseSql;
     }
 
+    /**
+     * 基本新增语法
+     * 只提供一次性新增所有的功能
+     * @return
+     */
     public String BaseInsertSQL(){
-        String baseSql  = "delete from "+sqlEntity.getTableName();
+        String baseSql  = null;
+        try {
+            baseSql = "INSERT INTO " + sqlEntity.getTableName() + " VALUES " + sqlEntity.geObjectValueBySQL();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return baseSql;
     }
+
+    /**
+     * 基础value赋值SQL
+     * @return
+     */
+    public String BaseValueSQL(){
+        String baseSql  = null;
+        try {
+            baseSql = "INSERT INTO " + sqlEntity.getTableName()+"(" + sqlEntity.getObjectBySQL() +")"+ " VALUES " + sqlEntity.geObjectValueBySQL();
+            return baseSql;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    /**
+     * 基础更新SQL id用于查询指定sql
+     * 需要结合where使用
+     * @return
+     */
+    public String BaseUpdateSQL(){
+        String baseSQL = null;
+        try {
+            baseSQL = "UPDATE " + sqlEntity.getTableName() + " SET " + sqlEntity.getUpdateSql();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return baseSQL;
+    }
+
+    /**
+     * 自定义更新查询
+     * @return
+     */
+    public String BaseUpdate(){
+        String baseSQL = null;
+        try {
+            baseSQL = "UPDATE " + sqlEntity.getTableName() + " SET ";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return baseSQL;
+    }
+
 }
