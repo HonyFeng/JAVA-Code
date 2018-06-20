@@ -1,6 +1,7 @@
-package com.org.gjt.WebSocket.work2.version1;
+package com.org.gjt.Socket.work2.OneToOne;
 
-import com.org.gjt.WebSocket.work2.entity.UDPUtilsSetting;
+import com.org.gjt.Socket.work2.entity.UDPUtilsSetting;
+import com.org.gjt.Socket.work2.utils.FileSendTools;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,6 +19,7 @@ import java.text.DecimalFormat;
 public class UDPSingleClient {
 
     private static void SendFile(String path) throws Exception {
+
         FileInputStream fis = null;
         DatagramSocket sendSocket= null;
         DatagramPacket sendPacket =null;
@@ -30,8 +32,9 @@ public class UDPSingleClient {
         try {
             sendSocket = new DatagramSocket();
             ip = InetAddress.getLocalHost();
+            // 读出文件
             fis = new FileInputStream(path);
-            byte[] buf =new byte[4096];
+            byte[] buf =new byte[UDPUtilsSetting.BUFFER_SIZE];
             int i;
             /**
              * 获取文件长度
@@ -40,32 +43,61 @@ public class UDPSingleClient {
             System.out.println("文件大小为："+file.length());
             long len = file.length();
             double totalLen = 0;
+            int no = 1;
             /**
-             * 程序开始时间
+             * 发送文件名称
              */
-            long startTime = System.currentTimeMillis();
-            while((i = fis.read(buf, 0, 4096) )==4096){
+            FileSendTools fileSendTools = new FileSendTools();
+            byte[] fileName =  fileSendTools.getNameByBytes(path);
+            DatagramPacket sendPacketFileName = new DatagramPacket(fileName, fileName.length, ip,  UDPUtilsSetting.sendFileNamePort);
+            sendSocket.send(sendPacketFileName);
+            byte[] res = new byte[1024];
+            getPacket = new DatagramPacket(res, res.length);
+            sendSocket.receive(getPacket);
+            String titleRes = new String(res, 0, getPacket.getLength());
+            System.out.println("回馈信息:"+titleRes);
+            // 开始发送文件
+            if(titleRes.equals("success")){
+                /**
+                 * 程序开始时间
+                 */
+                long startTime = System.currentTimeMillis();
+                while((i = fis.read(buf, 0, UDPUtilsSetting.BUFFER_SIZE) )==UDPUtilsSetting.BUFFER_SIZE){
+                    totalLen+=i;
+                    System.out.println("发送进度："+df.format((double)((totalLen/len)*100))+"%");
+                    sendPacket = new DatagramPacket(buf, buf.length, ip, UDPUtilsSetting.sendFilePort);
+                    sendSocket.send(sendPacket);
+                    byte[] getBuf = new byte[1024];
+                    getPacket = new DatagramPacket(getBuf, getBuf.length);
+                    sendSocket.receive(getPacket);
+                    String backMes = new String(getBuf, 0, getPacket.getLength());
+                    System.out.println("回馈信息:"+backMes);
+                    if(Integer.parseInt(backMes) == no){
+                        no++;
+                        System.out.println("接受成功");
+                        continue;
+                    }else {
+                        System.out.println("resend ...");
+                        sendSocket.send(sendPacket);
+                    }
+                }
                 totalLen+=i;
                 System.out.println("发送进度："+df.format((double)((totalLen/len)*100))+"%");
-                sendPacket = new DatagramPacket(buf, buf.length, ip, UDPUtilsSetting.port);
+                sendPacket = new DatagramPacket(buf, 0,i, ip,  UDPUtilsSetting.sendFilePort);
                 sendSocket.send(sendPacket);
                 Thread.sleep(1);
-            }
-            totalLen+=i;
-            System.out.println("发送进度："+df.format((double)((totalLen/len)*100))+"%");
-            sendPacket = new DatagramPacket(buf, 0,i, ip,  UDPUtilsSetting.port);
-            sendSocket.send(sendPacket);
-            Thread.sleep(1);
 
-            System.out.println("客户端传输结束.");
-            /**
-             * 程序结束时间
-             */
-            long endTime = System.currentTimeMillis();
-            /**
-             * 总花费
-             */
-            System.out.println("程序运行时间：" + df.format((double)((endTime - startTime)/1000)) + "s");
+                System.out.println("客户端传输结束.");
+                /**
+                 * 程序结束时间
+                 */
+                long endTime = System.currentTimeMillis();
+                /**
+                 * 总花费
+                 */
+                System.out.println("程序运行时间：" + df.format((double)((endTime - startTime)/1000)) + "s");
+            }
+
             /**
              *
              */
@@ -91,7 +123,8 @@ public class UDPSingleClient {
     }
 
     public static void main(String[] args) throws Exception {
-        String path = "E:\\HDICK\\17.5.25msf会话玩法录屏.mp4";
+        String path = "E:\\hack\\17.5.25msf会话玩法录屏.mp4";
+
         SendFile(path);
     }
 
